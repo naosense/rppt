@@ -1,0 +1,519 @@
+---
+title: "并发编程实战读后感"
+subtitle: "with xaringan"
+author: "Yihui Xie"
+date: "2016/12/12"
+output:
+  xaringan::moon_reader:
+    css: [default, zh-CN.css]
+    lib_dir: libs
+    nature:
+      ratio: '16:9'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+# 主要内容
+
+--
+
+1. 并发是什么
+
+--
+
+2. 并发的优点
+
+--
+
+3. 并发的风险
+
+---
+
+# 并发是什么
+
+并发是任务彼此交替的执行，并行是多个任务同时执行。
+
+---
+
+# 并发是如何产生的
+
+--
+
+1. 操作系统产生前，计算机一次只能执行一个程序
+
+--
+
+2. 操作系统的出现，使得计算机可以一次运行多个程序，不同的程序在各自的进程中运行
+
+--
+
+3. 对资源利用率、公平性以及程序设计方便性的追求，需要一种更轻量化的进程
+
+---
+
+# 并发的优点
+
+--
+
+- 充分利用处理器的能力，让任务更快的执行
+
+--
+
+- 更方便的编程模型，如生产-消费者模型
+
+---
+
+# 线程的风险
+
+--
+
+- 安全性问题
+
+--
+
+- 活跃性问题
+
+--
+
+- 性能问题
+
+---
+
+# 安全性问题
+
+--
+
+当多个线程访问某个类，不论采用何种调度方式或者这些线程如何交替执行，并且在调用代码中不需要额外的同步，这个类都能表现正确的行为
+
+--
+
+线程安全通常包括：
+
+- 一致性
+- 可见性
+
+---
+
+# 一致性
+
+一个计数器
+
+```java
+class Counter {
+    private int value;
+
+    public synchronized int getValue() {
+        return value;
+    }
+
+    public void incre() {
+        value++;
+    }
+}
+```
+
+---
+
+# 一致性
+
+测试程序
+
+```java
+Counter counter = new Counter();
+for (int i = 0; i < 1000; i++) {
+    EXECUTOR_SERVICE.execute(new Runnable() {
+        @Override
+        public void run() {
+            latch.countDown();
+            counter.incre();
+            System.out.println(counter.getValue());
+        }
+    });
+}
+latch.countDown();
+latch.await();
+```
+
+--
+
+... 682 683 684 684 685 686 686 687...
+
+---
+
+# 这种结果是如何产生的
+
+--
+
+=======683========+1=====684===========
+
+==========683=======+1======684========
+
+---
+
+# 竟态条件
+
+当某个计算的正确性取决于多个线程的执行时序时，就会发生竞态条件
+
+--
+
+常见静态条件：
+
+--
+
+- 读取-修改-写入, 比如++、+=、--等操作符等等
+
+--
+
+- 先检查后执行(Check-Then-Act)，比如银行转帐
+
+---
+
+# 如何保证一致性
+
+要保持状态的一致性，就需要在**原子操作**中更新所有相关的状态变量。
+
+--
+
+- 如果一个类由单个状态变量或者多个**彼此独立**的状态变量组成，那么可以使用Java Atomic类
+
+--
+
+- 如果一个类的状态是由多个彼此约束的变量决定，那么要在**同一个锁**上进行同步
+
+---
+
+# 可见性
+
+是不是只有修改状态变量的方法才需要同步？
+
+--
+
+```java
+class MuableInteger {
+    private int value;
+
+    public synchronized int getValue1() {
+        return value;
+    }
+
+    public int getValue2() {
+        return value;
+    }
+
+    public synchronized void setValue(int value) {
+        this.value = value;
+    }
+}
+```
+
+---
+
+# 可见性
+
+测试程序
+
+```java
+MuableInteger muable = new MuableInteger();
+while (true) {
+    for (int i = 0; i < 1000; i++) {
+        final int j = i;
+        EXECUTOR_SERVICE.execute(new Runnable() {
+            @Override
+            public void run() {
+                muable.setValue(j);
+                int v1 = muable.getValue1();
+                int v2 = muable.getValue2();
+                int v3 = muable.getValue1();
+                if (v1 == v3 && v1 != v2) {
+                    System.out.println(v1 + ":" + v2);
+                }
+            }
+        });
+    }
+}
+```
+
+--
+
+...450:453 188:186...
+
+---
+
+# 如何保证可见性
+
+同步不光可以实现原子性，同时还有另一个重要方面：**内存可见性**。在没有同步的情况下，编译器/处理器会对操作的顺序进行一些意想不到的调整，此时要想对内存的执行顺序进行判断，几乎无法得出正确的结论。
+
+为了确保所有的线程都能看到共享变量的最新值，所有执行读操作或者写操作的线程都必须在同一个锁上同步。
+
+---
+
+# volatile变量
+
+volatile变量是一种轻量级的可见性保证，它的不会被缓存，所以总是会返回最新值。但是仅保证可见性，不保证原子性。
+
+--
+
+使用条件：
+
+- 写入操作不依赖当前值，或者只有单线程更新变量值
+- 不会和其他变量一起纳入不变性条件
+
+---
+
+# 安全发布
+
+发布一个对象的意思是指，使对象能够在当前作用域外的地方使用。例如平常经常使用的getXXX返回一个对象的引用。
+
+- 不该发布的对象不能发布，否则对象就逸出了
+- 应该发布的对象要正确的发布
+
+---
+
+# 安全发布
+
+一个逸出的例子
+
+```java
+class ThisEscape {
+    public ThisEscape(EventSource source) {
+        source.registerListener(
+            new EventListener() {
+                public void onEvent(Event e) {
+                    doSomething(e);
+                }
+            });
+    }
+}
+```
+
+--
+
+当且仅当对象的构造函数返回时，对象才处于客预测的和一致的状态。因此当从对象的构造过程中发布对象时，只是发布了一个尚未构造完成的对象，不要在构造过程中使this溢出。
+
+---
+
+# 如何安全的发布
+
+- 在静态初始化模型中初始化一个对象引用
+- 将对象的引用保存到volatile类型的域或者AtomicRefererance对象中
+- 将对象的引用保存到某个正确构造对象的final类型域中
+- 将对象的引用保存到一个由锁保护的域中
+
+---
+
+# 不可变对象
+
+如果某个对象被创建后状态就不能修改，该对象即为不可变对象。不可变对象一定是线程安全的。
+
+--
+
+是不是把所有的域都设置为final对象就是不可变的？
+
+--
+
+不可变对象的条件：
+
+- 对象创建后状态就不能修改
+- 对象所有的域都是final的
+- 在创建对象过程中，this没有逸出
+
+--
+
+除非需要的域是可变的，否则都声明为final的。不仅是因为final域不可改变，还因为在Java内存模型中，final域还有特殊的语义。能够确保初始化过程的安全性，从而可以不受限制的访问不可变对象，并在共享这些对象时不需要同步。
+
+---
+
+# 线程封闭
+
+- 栈封闭
+- 实例封闭
+- ThreadLocal
+
+---
+
+# 活跃性问题
+
+- 资源性死锁
+- 顺序性死锁
+
+---
+
+# 资源性死锁
+
+设想一下，两个人吃饭，只有一双筷子，如果一个人一直吃个不停，另一个人势必挨饿，时间久了甚至饿死。
+
+.center[![](kuaizi.png)]
+
+如果有一个锁或者其他资源长期被一个线程占用，就会发生资源性死锁。
+
+---
+
+# 顺序性死锁
+
+再设想下，还是两个人吃饭，只有一双筷子，如果在抢占筷子的时候一人抢到一根，双方谁都不愿放下自己的一根筷子，结果就是两人谁也吃不了。
+
+当两个线程各持有彼此都需要的锁时，就有可能发生顺序性死锁。
+
+--
+
+如何解决这种死锁：
+
+- 如果没有拿到全部的锁，把自己得到的锁也放开
+- 按一定的顺序获得锁
+
+---
+
+# 顺序性死锁
+
+一个容易死锁的例子
+
+```java
+class LeftRightDeadLock {
+    private final Object left = new Object();
+    private final Object right = new Object();
+
+    public void leftRight() {
+        synchronized (left) {
+            synchronized (right) {
+                doSomeThing();
+            }
+        }
+    }
+
+    public void rightLeft() {
+        synchronized (right) {
+            synchronized (left) {
+                doSomeThingElse();
+            }
+        }
+    }
+}
+```
+
+---
+
+# 顺序性死锁
+
+动态锁顺序死锁
+
+```java
+public void transferMoney(Account from, Account to, int mount) {
+    synchronized (from) {
+        synchronized (to) {
+            if (from.getBalance() < mount) {
+                throw new InsufficientFundsException();
+            } else {
+                from.debit(mount);
+                to.credit(mount);
+            }
+        }
+    }
+}
+```
+
+---
+
+# 性能问题
+
+是不是线程越多程序运行的就越快？
+
+--
+
+Amdahl定律
+
+$$
+SpeedUp \leq \frac{1}{F+\frac{1-F}{N}}
+$$
+
+F为串行部分占比，N为处理器数
+
+---
+
+# 为什么线程不是越多越好
+
+--
+
+- 上下文切换
+
+--
+
+- 内存同步
+
+--
+
+- 阻塞
+
+
+---
+
+# 如何提高并发程序的性能
+
+在并发程序中，对可伸缩性的最主要威胁就是独占方式的资源锁。
+
+降低锁的竞争程度：
+
+- 减少锁的持有时间
+- 降低锁的请求频率
+- 使用带协调机制的独占锁
+
+---
+
+# 减少锁的持有时间
+
+```java
+class AttributeStore {
+    private final Map<String, String> attibutes = new HashedMap<>();
+
+    public synchronized boolean userLocationMatches(String name, String regexP) {
+        String key = "users." + name + ".location";
+        String location = attibutes.get(key);
+        if (location == null) {
+            return false;
+        } else {
+            return Pattern.matches(regexP, location);
+        }
+    }
+}
+```
+
+--
+
+缩小锁的范围，用同步块替换同步方法
+
+---
+
+# 降低所得请求频率
+
+```java
+class ServerStatus {
+    private final Set<String> users = new HashSet<>();
+    private final Set<String> quries = new HashSet<>();
+
+    public synchronized void addUser(String u) {
+        users.add(u);
+    }
+
+    public synchronized void addQuery(String q) {
+        quries.add(q);
+    }
+
+    public synchronized void removeUser(String u) {
+        users.remove(u);
+    }
+
+    public synchronized void removeQuery(String q) {
+        quries.remove(q);
+    }
+}
+```
+
+--
+
+如果一个锁需要保护多个相互独立的状态变量，可以将锁分为多个锁，各自保护各自的，锁分解和锁分段
+
+---
+
+# 一些替代独占锁的方法
+
+使用并发容器、读写锁、不可变对象以及原子变量
