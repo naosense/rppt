@@ -34,3 +34,4 @@ vignettes/*.pdf
 # Js libs and html
 libs
 *.html
+.Rproj.user
