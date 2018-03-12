@@ -1,5 +1,5 @@
 ---
-title: "并发编程实战读后感"
+title: "《并发编程实战》读后感"
 output:
   xaringan::moon_reader:
     css: [default, zh-CN.css]
@@ -12,6 +12,9 @@ output:
 ---
 
 # 主要内容
+
+???
+hhahhahhaha
 
 --
 
@@ -380,6 +383,7 @@ public int loadTheArk(Collections<Animal> candidates) {
 # ThreadLocal
 
 ```java
+// com.dajie.common.dubbo.monitor.callcount
 public class CallCountContext {
     private static final ThreadLocal<CallCountContext> CONTEXT_THREAD_LOCAL = new ThreadLocal<CallCountContext>();
 
@@ -595,6 +599,39 @@ class ServerStatus {
 --
 
 如果一个锁需要保护多个相互独立的状态变量，可以将锁分为多个锁，各自保护各自的，锁分解和锁分段
+
+---
+
+# 降低所得请求频率
+
+```java
+public class StripMap {
+    private static final int N_LOCKS = 16;
+    private final Node[] buckets;
+    private final Object[] locks;
+
+    public StripMap(int numBuckets) {...}
+    
+    private final int hash(Object key) {return Math.abs(key.hashCode() % buckets.length);}
+
+    public Object get(Object key) {
+        int hash = hash(key);
+        synchronized (locks[hash % N_LOCKS]) {
+            for (Node m = buckets[hash]; m != null; m = m.next) {
+                if (m.key.equals(key)) {
+                    return m.value;
+                }
+            }
+        }
+        return null;
+    }
+}
+
+```
+
+--
+
+将锁分解的技术扩展到一组独立对象上的锁，称为锁分段
 
 ---
 
