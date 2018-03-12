@@ -1,6 +1,5 @@
 ---
 title: "并发编程实战读后感"
-date: "2018-3-11"
 output:
   xaringan::moon_reader:
     css: [default, zh-CN.css]
@@ -85,13 +84,7 @@ class: center, middle, inverse
 --
 
 - 安全性问题
-
---
-
 - 活跃性问题
-
---
-
 - 性能问题
 
 ---
@@ -181,7 +174,7 @@ latch.await();
 
 --
 
-- 先检查后执行(Check-Then-Act)，比如银行转帐
+- 先检查后执行(Check-Then-Act)，比如if...then...
 
 ---
 
@@ -200,6 +193,12 @@ latch.await();
 ---
 
 # 可见性
+
+--
+
+当某个线程修改了对象状态后，其他线程可以立即看到发生的状态变化。
+
+--
 
 是不是只有修改状态变量的方法才需要同步？
 
@@ -350,6 +349,61 @@ class ThisEscape {
 
 ---
 
+# 栈封闭
+
+```java
+public int loadTheArk(Collections<Animal> candidates) {           
+    SortedSet<Animal> animals;                                    
+    int numPairs = 0;                                             
+    Animal candidate = null;                                      
+
+    animals = new TreeSet<Animal>(new SpeciesGenderComparator()); 
+    animals.addAll(candidates);                                   
+    for (Animal a : animals) {                                    
+        if (...) {                                                
+
+        } else {                                                  
+            ++numPairs;                                           
+        }                                                         
+
+    }                                                             
+}    
+                                                             
+```
+
+--
+
+任何方法都无法获得基本类型的引用，因此Java的这种语义确保了基本类型的局部变量始终封闭在线程内。
+
+---
+
+# ThreadLocal
+
+```java
+public class CallCountContext {
+    private static final ThreadLocal<CallCountContext> CONTEXT_THREAD_LOCAL = new ThreadLocal<CallCountContext>();
+
+    public static void init(){
+        CONTEXT_THREAD_LOCAL.set(new CallCountContext());
+    }
+
+    public static void clean(){
+        CONTEXT_THREAD_LOCAL.remove();
+    }
+
+    public static CallCountContext get(){
+        return CONTEXT_THREAD_LOCAL.get();
+    }
+}
+
+```
+
+--
+
+ThreadLocal防止对单实例变量或全局变量进行共享，例如数据库连接Connection，为每个使用该变量的线程都存有一个独立的副本，每个线程都会有自己的连接。
+
+---
+
 # 活跃性问题
 
 - 资源性死锁
@@ -361,7 +415,9 @@ class ThisEscape {
 
 设想一下，两个人吃饭，只有一双筷子，如果一个人一直吃个不停，另一个人势必挨饿，时间久了甚至饿死。
 
-.center[![](kuaizi.png)]
+.center[![](starve.jpg)]
+
+--
 
 如果有一个锁或者其他资源长期被一个线程占用，就会发生资源性死锁。
 
@@ -371,11 +427,21 @@ class ThisEscape {
 
 再设想下，还是两个人吃饭，只有一双筷子，如果在抢占筷子的时候一人抢到一根，双方谁都不愿放下自己的一根筷子，结果就是两人谁也吃不了。
 
-当两个线程各持有彼此都需要的锁时，就有可能发生顺序性死锁。
+.center[![](kuaizi.png)]
 
 --
 
-如何解决这种死锁：
+当两个线程各持有彼此都需要的锁时，就有可能发生顺序性死锁。
+
+---
+
+# 如何解决死锁:
+
+资源性死锁：
+减少占用，避免阻塞
+
+
+顺序型死锁：
 
 - 如果没有拿到全部的锁，把自己得到的锁也放开
 - 按一定的顺序获得锁
