@@ -344,7 +344,6 @@ class ThisEscape {
 # 线程封闭
 
 - 栈封闭
-- 实例封闭
 - ThreadLocal
 
 ---
