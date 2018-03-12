@@ -567,7 +567,7 @@ class AttributeStore {
 
 ---
 
-# 降低所得请求频率
+# 降低锁的请求频率
 
 ```java
 class ServerStatus {
@@ -594,11 +594,11 @@ class ServerStatus {
 
 --
 
-如果一个锁需要保护多个相互独立的状态变量，可以将锁分为多个锁，各自保护各自的，锁分解和锁分段
+如果一个锁需要保护多个.red[相互独立]的状态变量，可以将锁分为多个锁，各自保护各自的，锁分解
 
 ---
 
-# 降低所得请求频率
+# 降低锁的请求频率
 
 ```java
 public class StripMap {
