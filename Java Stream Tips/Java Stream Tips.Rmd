@@ -6,9 +6,43 @@ output:
     css: [default, zh-CN.css]
     lib_dir: libs
     nature:
-      ratio: '16:9'
+      ratio: '4:3'
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
 ---
 
+lambda
+
+stream
+
+常见业务场景下stream使用
+
+Java8变化
+
+- 方法和lambda作为一等公民
+- 流处理Stream
+
+
+行为参数化
+
+就是一个方法接受多个不同的行为作为参数，完成不同行为的能力
+
+- 减轻工作量，更好的应对变化的需求
+- java8之前不是不可以，但实现起来啰嗦
+
+lambda表达式
+
+所谓lambda表达式就是匿名函数
+
+组成：
+
+- 参数列表
+- 箭头
+- 主体
+
+在哪里以及如何使用lambda
+
+在函数式接口上使用lambda表达式
+
+函数式接口就是只定义了一个抽象方法的接口
