@@ -402,7 +402,7 @@ orders
 
 ---
 
-## 分组
+## 分组（1）
 
 ```java
 Map<Integer, List<C2CInvitation>> 
@@ -430,7 +430,7 @@ splitByUser(List<C2CInvitation> invitations) {
 
 ---
 
-## 分组
+## 分组（2）
 
 ```java
 // java8
@@ -460,9 +460,38 @@ Map<Boolean, List<Long>> splitNewAndOld(List<Long> ids) {
 
 ---
 
-## 排序
+## 排序（1）
 
 ```java
+PageIterator<OrderEntity> orderPages = ...;
+List<Order> orders = new ArrayList<>();
+if (orderPages != null && orderPages.getData() != null) {
+    for (OrderEntity o : orderPages.getData()) {
+        orders.add(
+        new Order(o.getId(), o.getMoney(), o.getPayDate()));
+    }
+    
+    Collections.sort(orders, new Comparator<Order>() {
+        @Override
+        public int compare(Order o1, Order o2) {
+            if (o1.getId() > o2.getId()) {
+                return 1;
+            } else if (o1.getId() < o2.getId()) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    });
+}
+```
+
+---
+
+## 排序（2）
+
+```java
+// java8
 PageIterator<OrderEntity> orderPages = ...;
 List<Order> orders = Optional.ofNullable(orderPages)
     .map(PageIterator::getData)
