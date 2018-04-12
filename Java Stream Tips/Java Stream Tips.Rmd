@@ -125,6 +125,14 @@ class: center, middle, inverse
 
 Stream是Java API的新成员，允许你以声明性的方式处理集合
 
+组成：
+
+- 数据源
+- 中间操作链
+- 终端操作
+
+--
+
 ```java
 // 选出低卡洛里的菜品
 List<String> lowCaloricDishName = menu
@@ -135,15 +143,6 @@ List<String> lowCaloricDishName = menu
     .map(Dish::getName)
     .collect(toList())
 ```
-
---
-
-组成：
-
-- 数据源
-- 中间操作链
-- 终端操作
-
 ---
 
 ## Stream适用场景
