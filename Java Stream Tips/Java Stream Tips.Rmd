@@ -90,7 +90,7 @@ Java8重大变化之一，方法和Lambda作为一等公民
 
 ## 方法和Lambda作为一等公民
 
-即允许方法和Lambda作为值进行传递
+即允许方法和Lambda作为值进行传递、返回、赋值等等
 
 ```javascript
 function compute(a, b, action) {
