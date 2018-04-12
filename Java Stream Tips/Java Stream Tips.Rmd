@@ -30,6 +30,12 @@ class: center, middle, inverse
 
 所谓Lambda表达式就是匿名函数，由参数列表、箭头以及主体组成
 
+形式：
+- (params) -> expression
+- (params) -> {statements;}
+
+--
+
 ```java
 // Lambda示例
 (String s) -> s.length()
@@ -39,12 +45,6 @@ class: center, middle, inverse
     return x + y;
 }
 ```
-
---
-
-形式：
-- (params) -> expression
-- (params) -> {statements;}
 
 需要注意的是`return`是控制流语句
 
