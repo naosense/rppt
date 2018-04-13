@@ -162,7 +162,7 @@ List<String> lowCaloricDishName = menu
 ```java
 PageIterator<OrderEntity> orders = orderManageService...;
 List<OrderEntity> ods = new ArrayList<>();
-if (orders != null) {
+if (orders != null && orders.getData() != null) {
     ods = orders.getData();
 }
 ```
@@ -208,8 +208,6 @@ List<ReceiptDetail> list = Optional.ofNullable(receipts)
     .map(this::receiptEntity2Detail)
     .collect(toList());
 ```
-
-
 
 ---
 
@@ -353,8 +351,9 @@ private String getAddress(List<AddressVo> addresses) {
     StringBuilder sb = new StringBuilder();
     if (CollectionUtils.isNotEmpty(addresses)) {
         for (AddressVo a : addresses) {
-            sb.append(a.getPoi().getName());
+            sb.append(a.getPoi().getName()).append(",");
         }
+        sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
     }
     return "";
@@ -370,7 +369,7 @@ private String getAddress(List<AddressVo> addresses) {
         .orElse(Collections.emptyList())
         .stream()
         .map(a -> a.getPoi().getName())
-        .collect(joining());
+        .collect(joining(","));
 }
 ```
 
