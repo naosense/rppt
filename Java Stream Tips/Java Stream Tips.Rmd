@@ -403,7 +403,7 @@ orders
 ## 分组（1）
 
 ```java
-Map<Integer, List<C2CInvitation>> 
+Map<Integer, List<C2CInvitation>>
 splitByUser(List<C2CInvitation> invitations) {
     if (CollectionUtils.isNotEmpty(invitations)) {
         Map<Integer, List<C2CInvitation>> map = 
