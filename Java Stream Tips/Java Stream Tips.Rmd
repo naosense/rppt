@@ -77,6 +77,7 @@ EXECUTOR_SERVICE.execute(new Runnable() {
 --
 
 ```java
+// java8
 EXECUTOR_SERVICE.execute(() -> {
     // do some thing
 });
@@ -434,7 +435,6 @@ splitByUser(List<C2CInvitation> invitations) {
 // java8
 Map<Integer, List<C2CInvitation>> 
 splitByUser(List<C2CInvitation> invitations) {
-        
     return Optional.ofNullable(invitations)
         .orElse(Collections.emptyList())
         .stream()
